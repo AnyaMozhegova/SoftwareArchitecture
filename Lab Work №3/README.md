@@ -1,5 +1,5 @@
 Диаграмма компонентов:
-![image](https://github.com/user-attachments/assets/69cf8d94-960d-4903-aede-e6a00a1d1840)
+![image](https://github.com/user-attachments/assets/08dd3792-0097-4e56-b876-acf8ff5b5825)
 ```PlantUML
 @startuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
