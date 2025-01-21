@@ -39,9 +39,9 @@ Body:
   "user_id": 123,
   "username": "anna",
   "is_admin": true,
-  "preferences": ""
-  "allergies": ""
-  "history": ""
+  "preferences": [],
+  "allergies": []
+  "created_menus": []
 }
 ```
 
@@ -52,15 +52,15 @@ curl -X POST -H "Content-Type: application/json" -d '{"username":"anna", "is_adm
 
 ### *2. Получение данных пользователя*
 
-#### *POST /user/{user_id}*
+#### *GET /user/{user_id}*
 
 **Описание:**  Получение данных о пользователе. Возвращает токен для авторизации, данные для аутентификации пользователя
 
 **Заголовки:**
-- ``Content-Type: application/json``
+- ``Authorization: Bearer {ваш_токен}``
 
 **Входные параметры:**  
-Body:  
+Query:  
 - `user_id` (intenger) - Идентификатор пользователя
 
 **Пример входных параметров:**
@@ -94,7 +94,10 @@ Body:
 curl -X GET -H "Authorization: Bearer {ваш_токен}" https://api.example.com/user/123
 
 ```
-### *3. Обновление юзера*
+
+### *3. Обновление данных пользователя*
+
+#### *PUT /user/{user_id}*
 **Описание:** Обновление данных пользователя. Возвращает токен для авторизации, данные для аутентификации пользователя (обновлённые) 
 
 **Заголовки:**
@@ -148,7 +151,8 @@ Body:
 curl -X PUT -H "Content-Type: application/json" -H "Authorization: Bearer {ваш_токен}" -d '{"username":"anna","is_admin": true,"password":"new_password12020"}' https://api.example.com/user/123
 ```
 
-### *4. Удаление юзера*
+### *4. Удаление пользователя*
+
 #### *DELETE /user/{user_id}*
 
 **Описание:** Удаление пользователя. Смотрим на код статусы.
@@ -196,17 +200,18 @@ curl -X DELETE -H "Authorization: Bearer {ваш_токен}" https://api.exampl
 **Входные параметры:**  
 Body:  
 - `dietaryPreferences` (string) - Тип диеты (например, "vegan", "gluten-free")
-- `allergies` (array) - Список аллергенов
 - `calorie_goal` (integer) - Цель по калориям
 - `budget` (integer) - Еженедельная цель по бюджету
 
 **Пример входных параметров:**
 ```json
 {
-  "budget": "2000",
-  "dietaryPreferences":"vegetarian"
-  "calorie_goal": "2000"
+{
+  "budget": 2000,
+  "dietary_preferences": ["vegetarian"], 
   "allergies": ["nuts", "dairy"]
+}
+
 }
 ```
 
@@ -219,18 +224,25 @@ Body:
 **Пример ответа:**
 ```json
 {
-  "preferences_id": 456,
-  "user_id": "123",
-  "budget": "2000",
-  "dietaryPreferences":"vegetarian"
-  "calorie_goal": "2000"
-  "allergies": ["nuts", "dairy"]
+  {
+    "id": 1,
+    "user_id": 1,
+    "budget": 2000.0,
+    "dietary_preferences": [
+        "vegetarian"
+    ],
+    "allergies": [
+        "dairy",
+        "nuts"
+    ],
+    "created_at": "2025-01-21T21:54:48.346823"
+}
 }
 ```
 
 **cURL:**
 ```
-curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer {ваш_токен}" -d '{"budget":"2000", "dietaryPreferences": "vegetarian", "calorie_goal": "2000", allergies": ["nuts","dairy"]}' https://api.example.com/preferences/456
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer {ваш_токен}" -d '{"budget":"2000", "dietaryPreferences": "vegetarian", allergies": ["nuts","dairy"]}' https://api.example.com/preferences/456
 ```
 
 ### *2. Получение предпочтений пользователя*
@@ -260,12 +272,19 @@ Query:
 **Пример ответа:**
 ```json
 {
-  "preferences_id": 456,
-  "user_id": "123",
-  "budget": "2000",
-  "dietaryPreferences":"vegetarian"
-  "calorie_goal": "2000"
-  "allergies": ["nuts", "dairy"]
+  {
+    "id": 1,
+    "user_id": 1,
+    "budget": 2000.0,
+    "dietary_preferences": [
+        "vegetarian"
+    ],
+    "allergies": [
+        "dairy",
+        "nuts"
+    ],
+    "created_at": "2025-01-21T21:54:48.346823"
+}
 }
 ```
 
@@ -274,7 +293,7 @@ Query:
 curl -X GET -H "Authorization: Bearer {ваш_токен}" https://api.example.com/preferences/456
 ```
 
-### *3. Получение предпочтений пользователя*
+### *3. Обновление предпочтений пользователя*
 
 #### *PUT /preferences/{preferences_id}*
 
@@ -290,10 +309,7 @@ Query:
 
 **Пример входных параметров:**
 ```
-  "budget": "2000",
-  "dietaryPreferences":"vegetarian"
-  "calorie_goal": "2000"
-  "allergies": ["nuts", "dairy"]
+  "budget": "1500"
 ```
 
 **Код статусы ответа:**
@@ -305,18 +321,25 @@ Query:
 **Пример ответа:**
 ```json
 {
-  "preferences_id": 456,
-  "user_id": "123",
-  "budget": "2000",
-  "dietaryPreferences":"vegetarian"
-  "calorie_goal": "2000"
-  "allergies": ["nuts", "dairy"]
+  {
+    "id": 1,
+    "user_id": 1,
+    "budget": 1500.0,
+    "dietary_preferences": [
+        "vegetarian"
+    ],
+    "allergies": [
+        "dairy",
+        "nuts"
+    ],
+    "created_at": "2025-01-21T21:54:48.346823"
+}
 }
 ```
 
 **cURL:** 
 ```
-curl -X PUT -H "Content-Type: application/json" -H "Authorization: Bearer {ваш_токен}" -d '{"budget":"2000", "dietaryPreferences": "vegetarian", "calorie_goal": "2000", allergies": ["nuts","dairy"]}' https://api.example.com/preferences/456
+curl -X PUT -H "Content-Type: application/json" -H "Authorization: Bearer {ваш_токен}" -d '{"budget":"1500"}' https://api.example.com/preferences/456
 ```
 
 ### *4. Удаление предпочтений пользователя*
@@ -356,85 +379,154 @@ curl -X DELETE -H "Authorization: Bearer {ваш_токен}" https://api.exampl
 
 ### *Меню:*
 
+### *1. Создание меню*
 
-### *1. Получение меню*
+#### *POST/menu_recommendation*
 
-#### *GET /menus/{menu_id}*
-
-**Описание:** Получение меню
+**Описание:** Создание пользовательских предпочтений
 
 **Заголовки:**
 - ``Content-Type: application/json``
+- ``Authorization: Bearer {ваш_токен}``
 
 **Входные параметры:**  
 Body:  
-
-
+- `menu_items` (массив объектов) - Список рецептов
 
 **Пример входных параметров:**
 ```json
 {
- /menus/789 
+  "menu_items": [
+    {
+      "id": 1,
+      "name": "banana",
+      "description": "A ripe banana",
+      "ingredients": "Banana",
+      "calories": 100,
+      "tags": ["fruit", "snack"]
+    },
+    {
+      "id": 2,
+      "name": "sup",
+      "description": "A vegetable soup",
+      "ingredients": "Water, carrots, onions, spices",
+      "calories": 150,
+      "tags": ["vegetarian", "soup"]
+    }
+  ],
+  "calories": 2000
 }
+
 ```
 
 **Код статусы ответа:**
-- `200 OK` - Успешный запрос, возвращается информация о точке интереса
-- `401 Unauthorized` - Ошибка авторизации, отсутствует или неверный токен
-- `404 Not Found` - Точка интереса с указанным point_id не найдена
+- `201 Created` Успешная регистрация
+- `400 Bad Request` Ошибка в данных запроса
+- `409 Conflict` - Конфликт пользователь с таким именем уже существует
 - `422 Unprocessable Entity` - Некорректный запрос (например, отсутствие обязательных параметров)
 
 **Пример ответа:**
 ```json
 {
-  "menu_id": 456,
-  "user_id": "123",
-  "menuItems": ["nuts", "dairy"],
-  "calories": "2000"
+    "id": 1,
+    "user_id": 1,
+    "generated_at": "2025-01-21T22:07:10.102070",
+    "menu_items": [
+        {
+            "id": 1,
+            "name": "banana",
+            "description": "A ripe banana",
+            "ingredients": "Banana",
+            "calories": 100.0,
+            "tags": [
+                "snack",
+                "fruit"
+            ]
+        },
+        {
+            "id": 2,
+            "name": "sup",
+            "description": "A vegetable soup",
+            "ingredients": "Water, carrots, onions, spices",
+            "calories": 150.0,
+            "tags": [
+                "soup",
+                "vegetarian"
+            ]
+        }
+    ],
+    "calories": 2000.0
 }
 ```
-cURL:
-```
-curl -X GET -H "Authorization: Bearer {ваш_токен}" https://api.example.com/menus/789
-```
-Рецепты:
 
-### * 1. Получение рецепта*
+**cURL:**
+```
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer {ваш_токен}" -d '{menu_items": [{"id": 1, "name": "banana", "description": "A ripe banana", "ingredients": "Banana", "calories": 100.0,"tags": ["snack","fruit"]},{"id": 2,"name": "sup","description": "A vegetable soup","ingredients": "Water, carrots, onions, spices","calories": 150.0,"tags": [ "soup", "vegetarian"]}], "calories": 2000.0 }' https://api.example.com/preferences/456
+```
 
-#### *GET  recipe/{recipe_id}*
-**Описание:** Получение меню
+### *2. Получение меню*
+
+#### *GET /menu_recommendation/{menu_recommendation_id}*
+
+**Описание:** Получение предпочтений пользователя
 
 **Заголовки:**
-- ``Content-Type: application/json``
+- `Authorization: Bearer {ваш_токен}`
 
 **Входные параметры:**  
-Body:  
-- 
-
+Query:  
+- `menu_recommendation_id` (intenger) - Идентификатор меню
 
 **Пример входных параметров:**
-```json
-{
- /recipe/789 
-}
+```
+/preferences_id/456
 ```
 
 **Код статусы ответа:**
-- `200 OK` - Успешный запрос, возвращается информация о точке интереса
+- `200 OK` - Успешный запрос, возвращается информация о маршруте
 - `401 Unauthorized` - Ошибка авторизации, отсутствует или неверный токен
-- `404 Not Found` - Точка интереса с указанным point_id не найдена
+- `404 Not Found` - Маршрут с указанным route_id не найден
 - `422 Unprocessable Entity` - Некорректный запрос (например, отсутствие обязательных параметров)
 
 **Пример ответа:**
 ```json
 {
- 
+    "id": 1,
+    "user_id": 1,
+    "generated_at": "2025-01-21T22:07:10.102070",
+    "menu_items": [
+        {
+            "id": 1,
+            "name": "banana",
+            "description": "A ripe banana",
+            "ingredients": "Banana",
+            "calories": 100.0,
+            "tags": [
+                "snack",
+                "fruit"
+            ]
+        },
+        {
+            "id": 2,
+            "name": "sup",
+            "description": "A vegetable soup",
+            "ingredients": "Water, carrots, onions, spices",
+            "calories": 150.0,
+            "tags": [
+                "soup",
+                "vegetarian"
+            ]
+        }
+    ],
+    "calories": 2000.0
 }
 ```
-cURL:
+
+**cURL:** 
 ```
-curl -X GET -H "Authorization: Bearer {ваш_токен}" https://api.example.com/menus/789
+curl -X GET -H "Authorization: Bearer {ваш_токен}" https://api.example.com/preferences/456
 ```
+
 ## *Тестирование*
 
 ### *Пользователь:*
