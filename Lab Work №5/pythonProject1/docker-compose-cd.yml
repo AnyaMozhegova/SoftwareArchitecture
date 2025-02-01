@@ -2,23 +2,34 @@ version: '3.8'
 
 services:
   gateway_service:
-    image: bogdanpolygalov/hse-sa-microservice:gateway_service
-    command: uvicorn app.gateway_service:app --reload --host 0.0.0.0 --port 8001
+    build: ./gateway_service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - menu_service
+      - user_service
+
+  menu_service:
+    build: ./menu_service
     ports:
       - "8001:8001"
-    environment:
-      - USER_SERVICE_URL=http://user_service:8002
-      - ROUTE_URL=http://route_waypoint_service:8003
-      - POINT_URL=http://route_waypoint_service:8003
 
   user_service:
-    image: bogdanpolygalov/hse-sa-microservice:user_service
-    command: uvicorn app.user_service:app --reload --host 0.0.0.0 --port 8002
+    build: ./user_service
     ports:
       - "8002:8002"
 
-  route_waypoint_service:
-    image: bogdanpolygalov/hse-sa-microservice:route_waypoint_service
-    command: uvicorn app.route_waypoint_service:app --reload --host 0.0.0.0 --port 8003
-    ports:
-      - "8003:8003"
+  tests:
+    image: python:3.9-slim
+    volumes:
+      - .:/app
+    working_dir: /app
+    depends_on:
+      - gateway_service
+      - menu_service
+      - user_service
+    command: >
+      sh -c "pip install pytest requests &&
+             pytest gateway_service/tests/ &&
+             pytest menu_service/tests/ &&
+             pytest user_service/tests/"

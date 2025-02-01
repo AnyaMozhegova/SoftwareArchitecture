@@ -1,7 +1,4 @@
-fastapi
-pydantic
-uvicorn
-python-jose[cryptography]
-python-multipart
-httpx
-pytest
+fastapi==0.68.0
+uvicorn==0.15.0
+requests==2.26.0
+pytest==6.2.4

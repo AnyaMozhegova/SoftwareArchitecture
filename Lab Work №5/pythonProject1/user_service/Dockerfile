@@ -1,14 +1,20 @@
-FROM python:3.12
+# Используем базовый образ Python
+FROM python:3.9-slim
 
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-COPY ./requirements.txt /app/requirements.txt
+# Копируем зависимости
+COPY requirements.txt .
 
-RUN apt-get update \
-    && apt-get install gcc -y \
-    && apt-get clean
+# Устанавливаем зависимости
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install -r /app/requirements.txt \
-    && rm -rf /root/.cache/pip
+# Копируем исходный код
+COPY . .
 
-COPY . /app/
+# Открываем порт
+EXPOSE 8002
+
+# Запускаем приложение
+CMD ["python", "app.py"]
