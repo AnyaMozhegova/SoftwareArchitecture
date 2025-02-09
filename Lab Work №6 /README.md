@@ -220,3 +220,267 @@ authManager2.authorizeUser()  // Тот же экземпляр, снова ав
 
 print(authManager1 === authManager2)  // true, это один и тот же экземпляр
 ```
+## Структурные шаблоны
+
+### Адаптер / Adapter
+
+**Назначение:** 
+Паттерн "Адаптер" используется для преобразования интерфейса одного класса в другой интерфейс, который ожидает клиент. Это полезно, когда у вас есть класс с несовместимым интерфейсом, и вам нужно использовать его в рамках существующей системы.
+
+Пример: Интеграция с внешним API для рецептов
+Есть внешний API для получения рецептов, но его интерфейс отличается от того, который используется в вашем приложении. Для интеграции с этим сервисом мы создаем адаптер, который приведет внешний интерфейс к ожидаемому.
+
+Проблема: У нас есть класс ExternalRecipeAPI, который получает рецепты в виде строк. Однако в вашем приложении ожидается массив объектов типа Recipe.
+Решение: Используем адаптер для преобразования строковых данных в объекты Recipe.
+
+![image](https://github.com/user-attachments/assets/f504d519-c8b7-4408-ab05-ef727ff4c9ec)
+
+Код:
+```Swift
+// Протокол, который мы ожидаем
+protocol RecipeService {
+    func fetchRecipes(completion: @escaping ([Recipe]?, Error?) -> Void)
+}
+
+// Внешний сервис с другим интерфейсом
+class ExternalRecipeAPI {
+    func getRecipesFromAPI(completion: @escaping ([String]?, Error?) -> Void) {
+        // Имитация запроса к внешнему API
+        completion(["Recipe 1", "Recipe 2"], nil)
+    }
+}
+
+// Адаптер, который преобразует интерфейс внешнего API в тот, который нам нужен
+class RecipeServiceAdapter: RecipeService {
+    private let externalAPI: ExternalRecipeAPI
+    
+    init(externalAPI: ExternalRecipeAPI) {
+        self.externalAPI = externalAPI
+    }
+    
+    func fetchRecipes(completion: @escaping ([Recipe]?, Error?) -> Void) {
+        externalAPI.getRecipesFromAPI { recipeNames, error in
+            if let recipeNames = recipeNames {
+                // Преобразуем строки в объекты Recipe
+                let recipes = recipeNames.map { Recipe(name: $0, calories: 200) }
+                completion(recipes, nil)
+            } else {
+                completion(nil, error)
+            }
+        }
+    }
+}
+```
+### Мост / Bridge
+
+**Назначение:** 
+Паттерн "Мост" позволяет разделить абстракцию и её реализацию, чтобы они могли изменяться независимо друг от друга. Это полезно, когда у вас есть несколько абстракций и разных реализаций, которые нужно сочетать.
+
+Пример: Рекомендации на основе различных факторов (бюджет, диетические предпочтения)
+Предположим, у нас есть система рекомендаций, которая может генерировать рецепты на основе различных критериев, таких как бюджет или диетические предпочтения. С помощью паттерна "Мост" можно разделить абстракцию от конкретных реализаций, чтобы каждый компонент мог развиваться независимо.
+
+Проблема: У нас есть несколько типов рекомендаций, которые должны использовать одну абстракцию.
+Решение: Используем паттерн "Мост", чтобы разделить абстракцию генерации рекомендаций от конкретной логики.
+
+![image](https://github.com/user-attachments/assets/3d29d6f6-e8df-415b-b411-d42791c108af)
+
+Код:
+```Swift
+// Абстракция для рекомендации
+protocol Recommendation {
+    func generateRecommendations() -> [Recipe]
+}
+
+// Реализация для рекомендаций по бюджету
+class BudgetRecommendation: Recommendation {
+    private let userPreferences: UserPreferences
+    
+    init(userPreferences: UserPreferences) {
+        self.userPreferences = userPreferences
+    }
+    
+    func generateRecommendations() -> [Recipe] {
+        // Логика рекомендаций на основе бюджета
+        return [Recipe(name: "Budget Recipe", calories: 150)]
+    }
+}
+
+// Реализация для рекомендаций по диетическим предпочтениям
+class DietaryRecommendation: Recommendation {
+    private let userPreferences: UserPreferences
+    
+    init(userPreferences: UserPreferences) {
+        self.userPreferences = userPreferences
+    }
+    
+    func generateRecommendations() -> [Recipe] {
+        // Логика рекомендаций на основе диетических предпочтений
+        return [Recipe(name: "Vegetarian Recipe", calories: 300)]
+    }
+}
+
+// Пример использования
+let userPreferences = UserPreferences(budget: 500, dietaryPreferences: ["Vegetarian"], allergies: ["Nuts"])
+let recommendation = DietaryRecommendation(userPreferences: userPreferences)
+
+let recipes = recommendation.generateRecommendations()
+```
+### Декоратор / Decorator
+
+**Назначение:**
+Паттерн "Декоратор" используется для динамического добавления нового функционала объектам. Это позволяет изменить поведение объекта на лету, не изменяя его исходный код.
+
+Пример: Фильтрация рецептов по аллергии
+Предположим, что  нужно добавить фильтрацию рецептов на основе аллергенов. Вместо того, чтобы изменять основной код, вы можете использовать паттерн "Декоратор", чтобы обогатить функциональность без изменения исходного класса.
+
+Проблема: Мы хотим добавить возможность фильтрации рецептов по аллергиям.
+Решение: Создаем декоратор, который будет фильтровать рецепты, добавляя это поведение к уже существующему объекту.
+
+![image](https://github.com/user-attachments/assets/a685a0d5-c4a2-4ba5-be0b-5e7f2e52405e)
+
+Код:
+```Swift
+// Протокол для предоставления рецептов
+protocol RecipeProvider {
+    func getRecipes() -> [Recipe]
+}
+
+// Реализация для получения базовых рецептов
+class SimpleRecipeProvider: RecipeProvider {
+    func getRecipes() -> [Recipe] {
+        return [Recipe(name: "Recipe 1", calories: 200), Recipe(name: "Recipe 2", calories: 300)]
+    }
+}
+
+// Декоратор для фильтрации по аллергии
+class AllergyFilterDecorator: RecipeProvider {
+    private let decoratedProvider: RecipeProvider
+    private let allergies: [String]
+    
+    init(decoratedProvider: RecipeProvider, allergies: [String]) {
+        self.decoratedProvider = decoratedProvider
+        self.allergies = allergies
+    }
+    
+    func getRecipes() -> [Recipe] {
+        let allRecipes = decoratedProvider.getRecipes()
+        return allRecipes.filter { recipe in
+            !self.allergies.contains(where: { recipe.name.contains($0) })
+        }
+    }
+}
+
+// Пример использования
+let simpleProvider = SimpleRecipeProvider()
+let allergyFilteredProvider = AllergyFilterDecorator(decoratedProvider: simpleProvider, allergies: ["Nuts"])
+
+let filteredRecipes = allergyFilteredProvider.getRecipes()
+```
+
+### Компоновщик  / Composite
+
+**Назначение:**
+Паттерн "Компоновщик" используется для создания иерархий объектов, которые обрабатываются одинаково, независимо от того, являются ли они "простыми" объектами или "составными". Это позволяет строить сложные объекты из простых компонентов.
+
+Пример: Меню, состоящее из разных рецептов
+Предположим, вам нужно реализовать меню, которое может включать как простые рецепты, так и группы рецептов. Паттерн "Компоновщик" позволит вам обрабатывать все эти элементы одинаково.
+
+Проблема: Нужно объединить рецепты в группы и работать с ними как с единым объектом.
+Решение: Создаем интерфейс MenuItem для всех элементов меню, а затем используем классы, которые могут быть как одиночными рецепты, так и коллекциями рецептов.
+
+![image](https://github.com/user-attachments/assets/1110f325-0486-4bb9-9c79-f2032a3bdd32)
+
+Код:
+```Swift
+// Протокол для всех элементов меню
+protocol MenuItem {
+    func getDescription() -> String
+}
+
+// Простое меню с одним рецептом
+class RecipeMenuItem: MenuItem {
+    private let name: String
+    
+    init(name: String) {
+        self.name = name
+    }
+    
+    func getDescription() -> String {
+        return name
+    }
+}
+
+// Составное меню, которое может содержать другие элементы меню
+class MenuCollection: MenuItem {
+    private var items: [MenuItem] = []
+    
+    func addItem(item: MenuItem) {
+        items.append(item)
+    }
+    
+    func getDescription() -> String {
+        return items.map { $0.getDescription() }.joined(separator: ", ")
+    }
+}
+
+// Пример использования
+let recipe1 = RecipeMenuItem(name: "Recipe 1")
+let recipe2 = RecipeMenuItem(name: "Recipe 2")
+let menu = MenuCollection()
+menu.addItem(item: recipe1)
+menu.addItem(item: recipe2)
+
+print(menu.getDescription())  // Выводит: "Recipe 1, Recipe 2"
+```
+
+## Поведенческие шаблоны
+
+### Стратегия / Strategy
+**Назначение:**  
+Определяет семейство алгоритмов, инкапсулирует каждый из них и делает их взаимозаменяемыми. Позволяет изменять алгоритмы независимо от клиентов, которые ими пользуются.
+
+Пример:
+Клиент выполняет одно действие, но с разными классами одного интерфейса.
+
+![image](https://github.com/user-attachments/assets/5b1284c2-14ee-434e-ad47-8fd8076188ed)
+
+Код:
+```Swift
+protocol NavigationStrategy {
+    func navigate()
+}
+
+class WalkingStrategy: NavigationStrategy {
+    func navigate() {
+        print("Используется стратегия пешеходной навигации")
+    }
+}
+
+class CyclingStrategy: NavigationStrategy {
+    func navigate() {
+        print("Используется стратегия велосипедной навигации")
+    }
+}
+
+class DrivingStrategy: NavigationStrategy {
+    func navigate() {
+        print("Используется стратегия автомобильной навигации")
+    }
+}
+
+class Navigator {
+    var navigationStrategy: NavigationStrategy
+
+    init(navigationStrategy: NavigationStrategy) {
+        self.navigationStrategy = navigationStrategy
+    }
+
+    func setNavigationStrategy(strategy: NavigationStrategy) {
+        navigationStrategy = strategy
+    }
+
+    func navigate() {
+        navigationStrategy.navigate()
+    }
+}
+```
