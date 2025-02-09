@@ -30,43 +30,6 @@ AdminUserFactory и RegularUserFactory — фабрики, которые соз
 
 ![image](https://github.com/user-attachments/assets/a6d62fcd-98f6-4ae4-98d4-b11eaa682dbe)
 
-
-**UML:** 
-```PlantUML
-@startuml
-interface User {
-  + register(): void
-}
-
-class AdminUser implements User {
-  + register(): void
-}
-
-class RegularUser implements User {
-  + register(): void
-}
-
-interface UserFactory {
-  + createUser(): User
-}
-
-class AdminUserFactory implements UserFactory {
-  + createUser(): User
-}
-
-class RegularUserFactory implements UserFactory {
-  + createUser(): User
-}
-
-UserFactory <|.. AdminUserFactory
-UserFactory <|.. RegularUserFactory
-User <|.. AdminUser
-User <|.. RegularUser
-AdminUserFactory --> AdminUser
-RegularUserFactory --> RegularUser
-
-@enduml
-```
 Код:
 ```Swift
 protocol User {
@@ -140,57 +103,6 @@ VeganUserFactory и RegularUserFactory — конкретные фабрики, 
 
 ![image](https://github.com/user-attachments/assets/98ceea1e-9ab6-42cb-b8f8-2dc0003976e1)
 
-**UML:** 
-```PlantUML
-@startuml
-interface UserPreferences {
-  + setPreferences(): void
-}
-
-interface Menu {
-  + createMenu(): void
-}
-
-class VeganPreferences implements UserPreferences {
-  + setPreferences(): void
-}
-
-class RegularPreferences implements UserPreferences {
-  + setPreferences(): void
-}
-
-class VeganMenu implements Menu {
-  + createMenu(): void
-}
-
-class RegularMenu implements Menu {
-  + createMenu(): void
-}
-
-interface UserEquipmentFactory {
-  + createPreferences(): UserPreferences
-  + createMenu(): Menu
-}
-
-class VeganUserFactory implements UserEquipmentFactory {
-  + createPreferences(): VeganPreferences
-  + createMenu(): VeganMenu
-}
-
-class RegularUserFactory implements UserEquipmentFactory {
-  + createPreferences(): RegularPreferences
-  + createMenu(): RegularMenu
-}
-
-UserEquipmentFactory <|.. VeganUserFactory
-UserEquipmentFactory <|.. RegularUserFactory
-UserPreferences <|.. VeganPreferences
-UserPreferences <|.. RegularPreferences
-Menu <|.. VeganMenu
-Menu <|.. RegularMenu
-
-@enduml
-```
 Код:
 ```Swift
 protocol UserPreferences {
@@ -285,20 +197,6 @@ AuthorizationManager — класс с единственным экземпля
 
 ![image](https://github.com/user-attachments/assets/eb7bd34a-af92-4a19-9fd2-9c156a6bdb77)
 
-**UML:** 
-```PlantUML
-@startuml
-class AuthorizationManager {
-  - shared: AuthorizationManager
-  - constructor(): void
-  + authorizeUser(): void
-  + getSharedInstance(): AuthorizationManager
-}
-
-AuthorizationManager --> AuthorizationManager : shared
-@enduml
-
-```
 Код:
 ```Swift
 class AuthorizationManager {
