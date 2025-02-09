@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  gateway_service:
+    command: uvicorn app.gateway_service:app --reload --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    environment:
+      - USER_SERVICE_URL=http://service_user_service:8002
+      - MENU_SERVICE_URL=http://service_menu_service:8003
+
+
+  user_service:
+    command: uvicorn app.user_service:app --reload --host 0.0.0.0 --port 8002
+    ports:
+      - "8002:8002"
+
+  service_menu_service:
+    command: uvicorn app.menu_service:app --reload --host 0.0.0.0 --port 8003
+    ports:
+      - "8003:8003"
