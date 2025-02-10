@@ -755,3 +755,348 @@ budgetRecommendation.generateMenu(userId: 123)
 let dietaryRecommendation = DietaryBasedMenuRecommendation()
 dietaryRecommendation.generateMenu(userId: 123)
 ```
+# Шаблоны проектирования GRASP
+
+## Роли
+
+### Information Expert
+
+**Проблема:** информация в системе должна обрабатываться, аккумулироваться,
+рассчитываться.
+
+**Решение:** назначить соответствующие обязанности тому классу, который её
+содержит
+Каждый сервис отвечает за обработку и хранение специфических данных. Например, UserPreferencesService отвечает за пользовательские предпочтения, а RecipeService управляет данными о рецептах.
+
+**Код:** при проектировании синглтона, как раз был создан класс-информатор
+
+```Swift
+class UserPreferencesService: Service {
+    typealias T = UserPreferences
+    var data: UserPreferences = UserPreferences(budget: 0, dietaryPreferences: [], allergies: [])
+    
+    func fetchData(id: Any, completion: @escaping (UserPreferences?, Error?) -> Void) {
+        // Загрузка предпочтений пользователя
+        let preferences = UserPreferences(budget: 500, dietaryPreferences: ["Vegetarian"], allergies: ["Nuts"])
+        completion(preferences, nil)
+    }
+}
+```
+### Creator
+**Проблема:** экземпляры класса необходимо создавать
+
+**Решение:** назначить обязанности инстанциирования тому классу, который будет использовать соответствующие экземпляры созданных классов
+
+**Код:** Сервис рекомендаций (MenuRecommendationService) создает объекты рекомендаций (MenuRecommendation), так как он отвечает за их генерацию.
+
+```Swift
+class MenuRecommendationService {
+    func generateRecommendation(for user: UserPreferences) -> MenuRecommendation {
+        let recommendedRecipes = RecipeService().getRecipes(for: user)
+        return MenuRecommendation(recipes: recommendedRecipes, totalCalories: recommendedRecipes.reduce(0) { $0 + $1.calories })
+    }
+}
+```
+
+### Controller
+
+**Проблема:** необходимо обрабатывать входные системные события
+
+**Решение:** назначить обязанность обработки входных системных событий специальному классу
+
+**Код:** MainViewController управляет запросами пользователя, передает их в сервисы и обрабатывает результаты.
+```Swift
+import UIKit
+
+class MainViewController: UIViewController {
+    var userService: UserPreferencesService = UserPreferencesService()
+    var recommendationService: MenuRecommendationService = MenuRecommendationService()
+    let userId = 123
+
+    func getUserPreferences() {
+        userService.fetchData(id: userId) { (preferences, error) in
+            if let preferences = preferences {
+                self.getMenuRecommendation(for: preferences)
+            }
+        }
+    }
+
+    func getMenuRecommendation(for preferences: UserPreferences) {
+        let recommendation = recommendationService.generateRecommendation(for: preferences)
+        print("Recommended Menu: \(recommendation.recipes.map { $0.name })")
+    }
+}
+```
+
+### Pure Fabrication
+
+**Проблема:** Необходимо обеспечивать Low Coupling (низкую связанность) и High Cohesion (высокую связность) в проекте. Бизнес-логика, связанная с управлением данными (например, загрузка и сохранение пользовательских предпочтений, рецептов), не должна быть смешана с логикой приложения.
+
+**Решение:** назначить обязанность обработки входных системных событий специальному классу
+
+**Код:** Синтезировать искусственную сущность (класс DataManager), которая будет отвечать за управление данными. Это позволит отделить логику работы с данными от бизнес-логики и улучшит структуру системы.
+```Swift
+// Пример Pure Fabrication - синтезированная сущность для работы с данными
+class DataManager {
+    // Метод для сохранения предпочтений пользователя
+    func saveUserPreferences(_ preferences: UserPreferences) {
+        // Логика сохранения предпочтений
+        print("User preferences saved: \(preferences)")
+    }
+
+    // Метод для загрузки рецептов
+    func fetchRecipes(completion: @escaping ([Recipe]?, Error?) -> Void) {
+        // Логика загрузки рецептов
+        let recipes = [
+            Recipe(name: "Vegetarian Salad", calories: 200, ingredients: ["Lettuce", "Tomato", "Cucumber"]),
+            Recipe(name: "Chicken Soup", calories: 300, ingredients: ["Chicken", "Carrot", "Potato"])
+        ]
+        completion(recipes, nil)
+    }
+}
+
+// Пример использования Pure Fabrication
+let dataManager = DataManager()
+let userPreferences = UserPreferences(budget: 500, dietaryPreferences: ["Vegetarian"], allergies: ["Nuts"])
+
+dataManager.saveUserPreferences(userPreferences)
+dataManager.fetchRecipes { recipes, error in
+    if let recipes = recipes {
+        print("Recipes loaded: \(recipes)")
+    } else if let error = error {
+        print("Error loading recipes: \(error.localizedDescription)")
+    }
+}
+```
+Связь с другими паттернами:
+
+Facade: DataManager может выступать в роли фасада, предоставляя простой интерфейс для работы с данными.
+
+Strategy: Можно использовать стратегии для изменения способа загрузки или сохранения данных (например, локальное хранилище или облачное).
+
+### Indirection
+
+**Проблема:** Прямая связь между компонентами (например, между MainViewController и сервисами) увеличивает связанность системы, что усложняет её поддержку и расширение.
+
+**Решение:** Использовать промежуточный компонент (RecommendationService), который будет выступать посредником между MainViewController и сервисами. Это уменьшит прямую связь между компонентами.
+```Swift
+// Пример Indirection - посредник для генерации рекомендаций
+class RecommendationService {
+    private let userPreferencesService = UserPreferencesService()
+    private let recipeService = RecipeService()
+
+    func generateRecommendations(for userId: Int, completion: @escaping ([Recipe]?, Error?) -> Void) {
+        userPreferencesService.fetchData(id: userId) { preferences, error in
+            if let preferences = preferences {
+                self.recipeService.fetchRecipes { recipes, error in
+                    if let recipes = recipes {
+                        // Фильтрация рецептов на основе предпочтений
+                        let filteredRecipes = recipes.filter { recipe in
+                            return !preferences.allergies.contains(where: { recipe.ingredients.contains($0) })
+                        }
+                        completion(filteredRecipes, nil)
+                    } else if let error = error {
+                        completion(nil, error)
+                    }
+                }
+            } else if let error = error {
+                completion(nil, error)
+            }
+        }
+    }
+}
+
+// Пример использования Indirection
+let recommendationService = RecommendationService()
+recommendationService.generateRecommendations(for: 123) { recipes, error in
+    if let recipes = recipes {
+        print("Recommended recipes: \(recipes)")
+    } else if let error = error {
+        print("Error generating recommendations: \(error.localizedDescription)")
+    }
+}
+```
+Связь с другими паттернами:
+
+Mediator: RecommendationService выступает в роли посредника между сервисами и контроллером.
+
+Facade: Может использоваться для упрощения взаимодействия с несколькими сервисами.
+
+## Принципы разработки
+
+### Low Coupling
+
+**Проблема:** Высокая связанность между классами (например, между MainViewController и сервисами) усложняет тестирование и модификацию системы.
+
+**Решение:** Использовать протоколы для уменьшения связанности. MainViewController будет зависеть от абстракций (UserPreferencesServiceProtocol, RecipeServiceProtocol), а не от конкретных реализаций.
+```Swift
+// Пример Low Coupling - использование протоколов
+protocol UserPreferencesServiceProtocol {
+    func fetchData(id: Any, completion: @escaping (UserPreferences?, Error?) -> Void)
+}
+
+protocol RecipeServiceProtocol {
+    func fetchRecipes(completion: @escaping ([Recipe]?, Error?) -> Void)
+}
+
+class MainViewController: UIViewController {
+    var userPreferencesService: UserPreferencesServiceProtocol?
+    var recipeService: RecipeServiceProtocol?
+    let userId = 123
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        userPreferencesService = UserPreferencesService()
+        recipeService = RecipeService()
+    }
+
+    func getUserPreferences() {
+        userPreferencesService?.fetchData(id: userId) { preferences, error in
+            if let preferences = preferences {
+                print("User Preferences: \(preferences)")
+            } else if let error = error {
+                print("Error: \(error.localizedDescription)")
+            }
+        }
+    }
+}
+```
+Связь с другими паттернами:
+
+Dependency Injection: Внедрение зависимостей через протоколы.
+
+Adapter: Протоколы могут использоваться для адаптации различных реализаций.
+
+### High Cohesion
+
+**Проблема:** Классы выполняют слишком много задач, что снижает читаемость и поддерживаемость кода.
+
+**Решение:** Разделить ответственности между классами. Каждый класс должен выполнять одну четко определённую задачу.
+```Swift
+// Пример High Cohesion - разделение ответственностей
+class UserPreferencesService: UserPreferencesServiceProtocol {
+    func fetchData(id: Any, completion: @escaping (UserPreferences?, Error?) -> Void) {
+        // Логика загрузки предпочтений
+        let preferences = UserPreferences(budget: 500, dietaryPreferences: ["Vegetarian"], allergies: ["Nuts"])
+        completion(preferences, nil)
+    }
+}
+
+class RecipeService: RecipeServiceProtocol {
+    func fetchRecipes(completion: @escaping ([Recipe]?, Error?) -> Void) {
+        // Логика загрузки рецептов
+        let recipes = [
+            Recipe(name: "Vegetarian Salad", calories: 200, ingredients: ["Lettuce", "Tomato", "Cucumber"]),
+            Recipe(name: "Chicken Soup", calories: 300, ingredients: ["Chicken", "Carrot", "Potato"])
+        ]
+        completion(recipes, nil)
+    }
+}
+```
+Связь с другими паттернами:
+
+Single Responsibility Principle (SOLID): Каждый класс отвечает за одну задачу.
+
+Facade: Классы могут быть объединены в фасад для упрощения взаимодействия.
+
+### Polymorphism 
+
+**Проблема:** В проекте может возникнуть необходимость работы с разными типами данных (например, пользователи, рецепты, рекомендации) через единый интерфейс. Жесткая привязка к конкретным типам данных усложняет расширение системы и добавление новых функциональностей.
+
+**Решение:** Использовать полиморфизм для работы с разными типами данных через единый интерфейс. Это позволяет системе быть гибкой и поддерживать новые типы данных без изменения существующего кода.
+
+```Swift
+// Пример Polymorphism - использование протокола для работы с разными типами данных
+protocol Displayable {
+    func display() -> String
+}
+
+// Реализация для UserPreferences
+extension UserPreferences: Displayable {
+    func display() -> String {
+        return "Budget: \(budget), Preferences: \(dietaryPreferences.joined(separator: ", ")), Allergies: \(allergies.joined(separator: ", "))"
+    }
+}
+
+// Реализация для Recipe
+extension Recipe: Displayable {
+    func display() -> String {
+        return "Recipe: \(name), Calories: \(calories), Ingredients: \(ingredients.joined(separator: ", "))"
+    }
+}
+
+// Пример использования полиморфизма
+let userPreferences = UserPreferences(budget: 500, dietaryPreferences: ["Vegetarian"], allergies: ["Nuts"])
+let recipe = Recipe(name: "Vegetarian Salad", calories: 200, ingredients: ["Lettuce", "Tomato", "Cucumber"])
+
+let items: [Displayable] = [userPreferences, recipe]
+
+for item in items {
+    print(item.display())
+}
+```
+Связь с другими паттернами:
+
+Strategy: Полиморфизм может использоваться для реализации различных стратегий (например, разные способы отображения данных).
+
+Adapter: Полиморфизм помогает адаптировать разные типы данных к единому интерфейсу.
+
+## Свойство программы
+
+### Protected Variations 
+
+**Проблема:** Изменения в одной части системы (например, изменение структуры данных или логики работы с данными) могут привести к необходимости изменений в других частях системы. Это увеличивает риск ошибок и усложняет поддержку
+
+**Решение:** Защитить систему от изменений, изолировав изменяющиеся части. Это можно сделать с помощью абстракций (протоколов) и инкапсуляции.
+
+**Код:**
+```Swift
+// Пример Protected Variations - использование протоколов для защиты от изменений
+protocol DataService {
+    associatedtype T
+    func fetchData(id: Any, completion: @escaping (T?, Error?) -> Void)
+}
+
+class UserPreferencesService: DataService {
+    typealias T = UserPreferences
+
+    func fetchData(id: Any, completion: @escaping (UserPreferences?, Error?) -> Void) {
+        // Логика загрузки предпочтений
+        let preferences = UserPreferences(budget: 500, dietaryPreferences: ["Vegetarian"], allergies: ["Nuts"])
+        completion(preferences, nil)
+    }
+}
+
+class RecipeService: DataService {
+    typealias T = [Recipe]
+
+    func fetchData(id: Any, completion: @escaping ([Recipe]?, Error?) -> Void) {
+        // Логика загрузки рецептов
+        let recipes = [
+            Recipe(name: "Vegetarian Salad", calories: 200, ingredients: ["Lettuce", "Tomato", "Cucumber"]),
+            Recipe(name: "Chicken Soup", calories: 300, ingredients: ["Chicken", "Carrot", "Potato"])
+        ]
+        completion(recipes, nil)
+    }
+}
+
+// Пример использования Protected Variations
+let userPreferencesService = UserPreferencesService()
+let recipeService = RecipeService()
+
+userPreferencesService.fetchData(id: 123) { preferences, error in
+    if let preferences = preferences {
+        print("User Preferences: \(preferences)")
+    } else if let error = error {
+        print("Error: \(error.localizedDescription)")
+    }
+}
+
+recipeService.fetchData(id: 123) { recipes, error in
+    if let recipes = recipes {
+        print("Recipes: \(recipes)")
+    } else if let error = error {
+        print("Error: \(error.localizedDescription)")
+    }
+}
+```
