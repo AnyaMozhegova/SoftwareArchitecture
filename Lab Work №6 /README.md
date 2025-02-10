@@ -181,7 +181,7 @@ regularMenu.createMenu()
 **Назначение:** 
 Одиночка гарантирует, что у класса будет только один экземпляр, и предоставляет к нему глобальную точку доступа. Это полезно для управления состоянием в приложении, где должен быть только один объект, например, для центра авторизации или логирования.
 
-Пример:
+**Пример:**
 Предположим, у нас есть класс AuthorizationManager, который управляет авторизацией пользователей. Мы хотим гарантировать, что в системе будет только один экземпляр этого класса.
 
 Для этого создаём статическую переменную shared, которая будет хранить единственный экземпляр класса.
@@ -227,7 +227,8 @@ print(authManager1 === authManager2)  // true, это один и тот же э
 **Назначение:** 
 Паттерн "Адаптер" используется для преобразования интерфейса одного класса в другой интерфейс, который ожидает клиент. Это полезно, когда у вас есть класс с несовместимым интерфейсом, и вам нужно использовать его в рамках существующей системы.
 
-Пример: Интеграция с внешним API для рецептов
+**Пример:**
+Интеграция с внешним API для рецептов
 Есть внешний API для получения рецептов, но его интерфейс отличается от того, который используется в вашем приложении. Для интеграции с этим сервисом мы создаем адаптер, который приведет внешний интерфейс к ожидаемому.
 
 Проблема: У нас есть класс ExternalRecipeAPI, который получает рецепты в виде строк. Однако в вашем приложении ожидается массив объектов типа Recipe.
@@ -276,7 +277,8 @@ class RecipeServiceAdapter: RecipeService {
 **Назначение:** 
 Паттерн "Мост" позволяет разделить абстракцию и её реализацию, чтобы они могли изменяться независимо друг от друга. Это полезно, когда у вас есть несколько абстракций и разных реализаций, которые нужно сочетать.
 
-Пример: Рекомендации на основе различных факторов (бюджет, диетические предпочтения)
+**Пример:**
+Рекомендации на основе различных факторов (бюджет, диетические предпочтения)
 Предположим, у нас есть система рекомендаций, которая может генерировать рецепты на основе различных критериев, таких как бюджет или диетические предпочтения. С помощью паттерна "Мост" можно разделить абстракцию от конкретных реализаций, чтобы каждый компонент мог развиваться независимо.
 
 Проблема: У нас есть несколько типов рекомендаций, которые должны использовать одну абстракцию.
@@ -330,7 +332,8 @@ let recipes = recommendation.generateRecommendations()
 **Назначение:**
 Паттерн "Декоратор" используется для динамического добавления нового функционала объектам. Это позволяет изменить поведение объекта на лету, не изменяя его исходный код.
 
-Пример: Фильтрация рецептов по аллергии
+**Пример:**
+Фильтрация рецептов по аллергии
 Предположим, что  нужно добавить фильтрацию рецептов на основе аллергенов. Вместо того, чтобы изменять основной код, вы можете использовать паттерн "Декоратор", чтобы обогатить функциональность без изменения исходного класса.
 
 Проблема: Мы хотим добавить возможность фильтрации рецептов по аллергиям.
@@ -382,7 +385,8 @@ let filteredRecipes = allergyFilteredProvider.getRecipes()
 **Назначение:**
 Паттерн "Компоновщик" используется для создания иерархий объектов, которые обрабатываются одинаково, независимо от того, являются ли они "простыми" объектами или "составными". Это позволяет строить сложные объекты из простых компонентов.
 
-Пример: Меню, состоящее из разных рецептов
+**Пример:**
+Меню, состоящее из разных рецептов
 Предположим, вам нужно реализовать меню, которое может включать как простые рецепты, так и группы рецептов. Паттерн "Компоновщик" позволит вам обрабатывать все эти элементы одинаково.
 
 Проблема: Нужно объединить рецепты в группы и работать с ними как с единым объектом.
@@ -437,50 +441,317 @@ print(menu.getDescription())  // Выводит: "Recipe 1, Recipe 2"
 
 ### Стратегия / Strategy
 **Назначение:**  
-Определяет семейство алгоритмов, инкапсулирует каждый из них и делает их взаимозаменяемыми. Позволяет изменять алгоритмы независимо от клиентов, которые ими пользуются.
+Паттерн "Стратегия" определяет семейство алгоритмов, инкапсулирует каждый из них и делает их взаимозаменяемыми. Это позволяет изменять алгоритмы независимо от клиентов, которые ими пользуются.
 
-Пример:
-Клиент выполняет одно действие, но с разными классами одного интерфейса.
+**Пример:**
+"Стратегия" может использоваться для выбора различных алгоритмов рекомендации рецептов в зависимости от предпочтений пользователя. Например, можно реализовать стратегии подбора рецептов с учетом бюджета, аллергий и калорийности.
 
-![image](https://github.com/user-attachments/assets/5b1284c2-14ee-434e-ad47-8fd8076188ed)
+![image](https://github.com/user-attachments/assets/2789b278-9e8f-4f5b-a894-d6eff7bd53db)
+
 
 Код:
 ```Swift
-protocol NavigationStrategy {
-    func navigate()
+protocol RecommendationStrategy {
+    func recommendRecipes(for user: User) -> [Recipe]
 }
 
-class WalkingStrategy: NavigationStrategy {
-    func navigate() {
-        print("Используется стратегия пешеходной навигации")
-    }
-}
-
-class CyclingStrategy: NavigationStrategy {
-    func navigate() {
-        print("Используется стратегия велосипедной навигации")
+class BudgetBasedStrategy: RecommendationStrategy {
+    func recommendRecipes(for user: User) -> [Recipe] {
+        return RecipeDatabase.shared.recipes.filter { $0.price <= user.preferences.budget }
     }
 }
 
-class DrivingStrategy: NavigationStrategy {
-    func navigate() {
-        print("Используется стратегия автомобильной навигации")
+class AllergyAwareStrategy: RecommendationStrategy {
+    func recommendRecipes(for user: User) -> [Recipe] {
+        return RecipeDatabase.shared.recipes.filter { recipe in
+            !recipe.ingredients.contains(where: { user.preferences.allergies.contains($0) })
+        }
     }
 }
 
-class Navigator {
-    var navigationStrategy: NavigationStrategy
-
-    init(navigationStrategy: NavigationStrategy) {
-        self.navigationStrategy = navigationStrategy
-    }
-
-    func setNavigationStrategy(strategy: NavigationStrategy) {
-        navigationStrategy = strategy
-    }
-
-    func navigate() {
-        navigationStrategy.navigate()
+class CalorieBasedStrategy: RecommendationStrategy {
+    func recommendRecipes(for user: User) -> [Recipe] {
+        return RecipeDatabase.shared.recipes.filter { $0.calories <= user.preferences.calorieLimit }
     }
 }
+
+class RecipeRecommender {
+    private var strategy: RecommendationStrategy
+    
+    init(strategy: RecommendationStrategy) {
+        self.strategy = strategy
+    }
+    
+    func setStrategy(_ strategy: RecommendationStrategy) {
+        self.strategy = strategy
+    }
+    
+    func getRecommendations(for user: User) -> [Recipe] {
+        return strategy.recommendRecipes(for: user)
+    }
+}
+```
+### Наблюдатель  / Observer
+
+**Назначение:**  
+Определяет зависимость "один ко многим" между объектами так, что при изменении состояния одного объекта все зависимые объекты автоматически получают уведомление и обновляются.
+
+**Пример:**  
+Паттерн "Наблюдатель" используется для обновления рекомендаций меню, когда пользователь изменяет свои предпочтения (например, добавляет аллергию или меняет бюджет).
+
+![image](https://github.com/user-attachments/assets/a3602f92-43ae-47b6-9a36-72081bf7e923)
+
+Код:
+```Swift
+protocol UserPreferencesObserver: AnyObject {
+    func updatePreferences(for user: User)
+}
+
+class UserPreferencesSubject {
+    private var observers: [UserPreferencesObserver] = []
+    
+    func addObserver(observer: UserPreferencesObserver) {
+        observers.append(observer)
+    }
+    
+    func removeObserver(observer: UserPreferencesObserver) {
+        observers.removeAll { $0 === observer }
+    }
+    
+    func notifyObservers(user: User) {
+        for observer in observers {
+            observer.updatePreferences(for: user)
+        }
+    }
+}
+```
+
+### Состояние  / State
+
+**Назначение:**  
+Позволяет объекту изменять свое поведение в зависимости от внутреннего состояния.
+
+**Пример:** 
+Паттерн "Состояние" может использоваться для изменения поведения системы в зависимости от уровня активности пользователя (например, новый пользователь, активный пользователь, редко использующий сервис).
+
+![image](https://github.com/user-attachments/assets/0ca78bb3-9956-4d17-aa5b-bd37c49bddcb)
+
+Код:
+```Swift
+class UserState {
+    func handle() {
+        // Базовая реализация
+    }
+}
+
+class NewUserState: UserState {
+    override func handle() {
+        print("Отображаем приветственное сообщение")
+    }
+}
+
+class ActiveUserState: UserState {
+    override func handle() {
+        print("Показываем новые рекомендации")
+    }
+}
+
+class InactiveUserState: UserState {
+    override func handle() {
+        print("Отправляем напоминание пользователю")
+    }
+}
+
+class UserContext {
+    private var state: UserState
+    
+    init(initialState: UserState) {
+        self.state = initialState
+    }
+    
+    func setState(newState: UserState) {
+        self.state = newState
+    }
+    
+    func requestState() {
+        self.state.handle()
+    }
+}
+```
+
+### Команда   / Command
+
+**Назначение:**  
+Паттерн Command позволяет инкапсулировать запрос пользователя в виде отдельного объекта. Это полезно в случаях, когда необходимо:
+
+Логировать действия пользователей (например, запрос на рекомендации или обновление предпочтений).
+
+Позволять откат или повторное выполнение действий.
+
+Организовать очередь команд для последовательного выполнения.
+
+**Пример:** 
+журнал RequestLog, который хранит все запросы пользователей. Использование паттерна "Команда" позволит:
+
+Представить каждое действие пользователя в виде объекта команды.
+
+Централизованно логировать выполнение команд в RequestLog.
+
+Упростить поддержку кода за счет разделения логики выполнения и логирования.
+
+UserActionCommand — общий интерфейс для всех команд.
+
+GetRecommendationsCommand — команда для получения рекомендаций.
+
+UpdatePreferencesCommand — команда для обновления предпочтений.
+
+RequestLogger — обработчик команд, записывающий их в журнал RequestLog перед выполнением.
+
+![image](https://github.com/user-attachments/assets/575c197c-2cdd-449b-9667-a5aadd52e01d)
+
+Код:
+```Swift
+import Foundation
+
+// Протокол команды
+protocol UserActionCommand {
+    func execute()
+}
+
+// Команда для получения рекомендаций
+class GetRecommendationsCommand: UserActionCommand {
+    private let userId: Int
+
+    init(userId: Int) {
+        self.userId = userId
+    }
+
+    func execute() {
+        print("Получение рекомендаций для пользователя с ID \(userId)")
+        // Вызов сервиса рекомендаций
+        let service = RecipeRecommendationService()
+        service.fetchData(id: userId) { recipes, error in
+            if let recipes = recipes {
+                print("Рекомендации: \(recipes.map { $0.name }.joined(separator: ", "))")
+            } else if let error = error {
+                print("Ошибка получения рекомендаций: \(error.localizedDescription)")
+            }
+        }
+    }
+}
+
+// Команда для обновления предпочтений пользователя
+class UpdatePreferencesCommand: UserActionCommand {
+    private let userId: Int
+    private let newPreferences: UserPreferences
+
+    init(userId: Int, newPreferences: UserPreferences) {
+        self.userId = userId
+        self.newPreferences = newPreferences
+    }
+
+    func execute() {
+        print("Обновление предпочтений пользователя с ID \(userId)")
+        // Здесь можно вызвать сервис обновления предпочтений
+    }
+}
+
+// Логгер запросов
+class RequestLogger {
+    func executeCommand(command: UserActionCommand) {
+        print("Логирование команды: \(type(of: command))")
+        command.execute()
+    }
+}
+
+// Использование команд
+let logger = RequestLogger()
+let getRecommendations = GetRecommendationsCommand(userId: 123)
+let updatePreferences = UpdatePreferencesCommand(userId: 123, newPreferences: UserPreferences(budget: 1000, dietaryPreferences: ["Vegan"], allergies: ["Dairy"]))
+
+logger.executeCommand(command: getRecommendations)
+logger.executeCommand(command: updatePreferences)
+```
+
+### Шаблонный метод  / Template Method
+
+**Назначение:**  
+Паттерн Template Method определяет общую структуру алгоритма, позволяя подклассам изменять отдельные шаги.
+
+
+**Пример:** 
+Система генерирует рекомендации на основе предпочтений пользователя. Этот процесс можно стандартизировать с помощью шаблонного метода:
+
+Определить общий процесс генерации рекомендаций.
+
+Разрешить подклассам изменять конкретные шаги (например, фильтрацию рецептов по разным критериям).
+
+Исключить дублирование кода.
+
+MenuRecommendationTemplate — абстрактный класс, содержащий метод generateMenu(), включающий шаги процесса.
+BudgetBasedMenuRecommendation — конкретная реализация, фильтрующая рецепты по бюджету.
+DietaryBasedMenuRecommendation — реализация, фильтрующая рецепты по диетическим предпочтениям.
+
+![image](https://github.com/user-attachments/assets/09f0c93d-11a0-46ed-a3ee-10192f642b35)
+
+Код:
+```Swift
+import Foundation
+
+// Абстрактный класс для генерации меню
+class MenuRecommendationTemplate {
+
+    // Шаблонный метод, определяющий процесс генерации меню
+    final func generateMenu(userId: Int) {
+        let preferences = fetchUserPreferences(userId: userId)
+        let recipes = fetchRecipes()
+        let filteredRecipes = filterRecipes(recipes: recipes, preferences: preferences)
+        createRecommendation(userId: userId, recipes: filteredRecipes)
+    }
+
+    // Получение предпочтений пользователя
+    func fetchUserPreferences(userId: Int) -> UserPreferences {
+        print("Загрузка предпочтений пользователя \(userId)")
+        return UserPreferences(budget: 500, dietaryPreferences: ["Vegetarian"], allergies: ["Nuts"])
+    }
+
+    // Получение списка рецептов
+    func fetchRecipes() -> [Recipe] {
+        print("Загрузка списка рецептов")
+        return [Recipe(name: "Салат", calories: 200), Recipe(name: "Суп", calories: 300)]
+    }
+
+    // Метод для фильтрации рецептов (реализуется в подклассах)
+    func filterRecipes(recipes: [Recipe], preferences: UserPreferences) -> [Recipe] {
+        fatalError("Этот метод должен быть переопределен в подклассе")
+    }
+
+    // Создание меню на основе отфильтрованных рецептов
+    func createRecommendation(userId: Int, recipes: [Recipe]) {
+        print("Создание меню для пользователя \(userId): \(recipes.map { $0.name }.joined(separator: ", "))")
+    }
+}
+
+// Реализация с фильтрацией по бюджету
+class BudgetBasedMenuRecommendation: MenuRecommendationTemplate {
+    override func filterRecipes(recipes: [Recipe], preferences: UserPreferences) -> [Recipe] {
+        print("Фильтрация рецептов по бюджету: \(preferences.budget)")
+        return recipes.filter { _ in preferences.budget >= 500 }
+    }
+}
+
+// Реализация с фильтрацией по диетическим предпочтениям
+class DietaryBasedMenuRecommendation: MenuRecommendationTemplate {
+    override func filterRecipes(recipes: [Recipe], preferences: UserPreferences) -> [Recipe] {
+        print("Фильтрация рецептов по диетическим предпочтениям: \(preferences.dietaryPreferences)")
+        return recipes.filter { _ in preferences.dietaryPreferences.contains("Vegetarian") }
+    }
+}
+
+// Использование шаблонного метода
+let budgetRecommendation = BudgetBasedMenuRecommendation()
+budgetRecommendation.generateMenu(userId: 123)
+
+let dietaryRecommendation = DietaryBasedMenuRecommendation()
+dietaryRecommendation.generateMenu(userId: 123)
 ```
